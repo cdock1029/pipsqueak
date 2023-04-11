@@ -12,8 +12,14 @@
   rows={@streams.nodes}
   row_click={fn {_id, node} -> JS.navigate(~p"/nodes/#{node}") end}
 >
+  <:col :let={{_id, node}} label="ID"><%= node.id %></:col>
   <:col :let={{_id, node}} label="Title"><%= node.title %></:col>
   <:col :let={{_id, node}} label="Description"><%= node.description %></:col>
+  <:col :let={{_id, node}} label="Parent ID">
+    <span :if={node.parent}>
+      <%= node.parent.id %>
+    </span>
+  </:col>
   <:col :let={{_id, node}} label="Expanded"><%= node.expanded %></:col>
   <:action :let={{_id, node}}>
     <div class="sr-only">

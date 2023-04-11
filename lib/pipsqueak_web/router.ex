@@ -17,7 +17,7 @@ defmodule PipsqueakWeb.Router do
   scope "/", PipsqueakWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", HomeLive.Index, :index
 
     live "/nodes", NodeLive.Index, :index
     live "/nodes/new", NodeLive.Index, :new

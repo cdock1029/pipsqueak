@@ -1,6 +1,6 @@
 <.header>
-  Node <%= @node.id %>
-  <:subtitle>This is a node record from your database.</:subtitle>
+  <%= @node.title %>
+  <:subtitle><%= @node.description %></:subtitle>
   <:actions>
     <.link patch={~p"/nodes/#{@node}/show/edit"} phx-click={JS.push_focus()}>
       <.button>Edit node</.button>
@@ -8,11 +8,24 @@
   </:actions>
 </.header>
 
-<.list>
+<%!-- <.list>
   <:item title="Title"><%= @node.title %></:item>
   <:item title="Description"><%= @node.description %></:item>
   <:item title="Expanded"><%= @node.expanded %></:item>
-</.list>
+</.list> --%>
+
+<div :if={length(@node.children) > 0} class="mt-8">
+  <.table
+    id="nodes"
+    rows={@node.children}
+    row_click={fn node -> JS.navigate(~p"/nodes/#{node}") end}
+  >
+    <:col :let={node} label="ID"><%= node.id %></:col>
+    <:col :let={node} label="Title"><%= node.title %></:col>
+    <:col :let={node} label="Description"><%= node.description %></:col>
+    <:col :let={node} label="Expanded"><%= node.expanded %></:col>
+  </.table>
+</div>
 
 <.back navigate={~p"/nodes"}>Back to nodes</.back>
 

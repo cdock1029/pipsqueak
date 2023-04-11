@@ -4,6 +4,11 @@ defmodule PipsqueakWeb.NodeLive.FormComponent do
   alias Pipsqueak.Data
 
   @impl true
+  def mount(socket) do
+    {:ok, socket |> assign(:nodes, Data.list_nodes())}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <div>
@@ -21,9 +26,22 @@ defmodule PipsqueakWeb.NodeLive.FormComponent do
       >
         <.input field={@form[:title]} type="text" label="Title" />
         <.input field={@form[:description]} type="text" label="Description" />
+        <.input
+          field={@form[:parent_id]}
+          type="select"
+          label="Parent"
+          prompt="Choose parent node"
+          options={Enum.map(@nodes, &{&1.title, &1.id})}
+        />
         <.input field={@form[:expanded]} type="checkbox" label="Expanded" />
         <:actions>
-          <.button phx-disable-with="Saving...">Save Node</.button>
+          <.button
+            disabled={!@form.source.valid?}
+            phx-disable-with="Saving..."
+            class="disabled:cursor-not-allowed"
+          >
+            Save Node
+          </.button>
         </:actions>
       </.simple_form>
     </div>
@@ -85,7 +103,7 @@ defmodule PipsqueakWeb.NodeLive.FormComponent do
   end
 
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do
-    assign(socket, :form, to_form(changeset))
+    assign(socket, :form, to_form(changeset) |> IO.inspect())
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})

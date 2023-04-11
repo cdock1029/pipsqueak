@@ -18,7 +18,7 @@ defmodule Pipsqueak.Data do
 
   """
   def list_nodes do
-    Repo.all(Node)
+    Repo.all(Node) |> Repo.preload([:parent, :children])
   end
 
   @doc """
@@ -35,7 +35,7 @@ defmodule Pipsqueak.Data do
       ** (Ecto.NoResultsError)
 
   """
-  def get_node!(id), do: Repo.get!(Node, id)
+  def get_node!(id), do: Repo.get!(Node, id) |> Repo.preload([:parent, :children])
 
   @doc """
   Creates a node.
