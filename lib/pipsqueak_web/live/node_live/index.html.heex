@@ -1,0 +1,43 @@
+<.header>
+  Listing Nodes
+  <:actions>
+    <.link patch={~p"/nodes/new"}>
+      <.button>New Node</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="nodes"
+  rows={@streams.nodes}
+  row_click={fn {_id, node} -> JS.navigate(~p"/nodes/#{node}") end}
+>
+  <:col :let={{_id, node}} label="Title"><%= node.title %></:col>
+  <:col :let={{_id, node}} label="Description"><%= node.description %></:col>
+  <:col :let={{_id, node}} label="Expanded"><%= node.expanded %></:col>
+  <:action :let={{_id, node}}>
+    <div class="sr-only">
+      <.link navigate={~p"/nodes/#{node}"}>Show</.link>
+    </div>
+    <.link patch={~p"/nodes/#{node}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, node}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: node.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="node-modal" show on_cancel={JS.patch(~p"/nodes")}>
+  <.live_component
+    module={PipsqueakWeb.NodeLive.FormComponent}
+    id={@node.id || :new}
+    title={@page_title}
+    action={@live_action}
+    node={@node}
+    patch={~p"/nodes"}
+  />
+</.modal>
