@@ -23,7 +23,10 @@ defmodule Pipsqueak.Data.Node do
   end
 
   def validate_parent_not_self(changeset) do
-    if get_field(changeset, :parent_id) == get_field(changeset, :id) do
+    parent = get_field(changeset, :parent_id)
+    id = get_field(changeset, :id)
+
+    if id != nil && parent == id do
       add_error(changeset, :parent_id, "Cannot set parent = self.")
     else
       changeset

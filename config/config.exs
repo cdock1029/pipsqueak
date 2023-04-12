@@ -12,6 +12,7 @@ config :pipsqueak,
 
 # Configures the endpoint
 config :pipsqueak, PipsqueakWeb.Endpoint,
+  adapter: Bandit.PhoenixAdapter,
   url: [host: "localhost"],
   render_errors: [
     formats: [html: PipsqueakWeb.ErrorHTML, json: PipsqueakWeb.ErrorJSON],

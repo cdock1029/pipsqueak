@@ -35,7 +35,17 @@ defmodule Pipsqueak.Data do
       ** (Ecto.NoResultsError)
 
   """
-  def get_node!(id), do: Repo.get!(Node, id) |> Repo.preload([:parent, :children])
+  def get_node!(id) when not is_nil(id),
+    do: Repo.get!(Node, id) |> Repo.preload([:parent, :children])
+
+  def get_node!(nil) do
+    q =
+      from n in Node,
+        where: is_nil(n.parent_id)
+
+    [node] = Repo.all(q) |> Repo.preload([:parent, :children])
+    node
+  end
 
   @doc """
   Creates a node.
@@ -50,9 +60,7 @@ defmodule Pipsqueak.Data do
 
   """
   def create_node(attrs \\ %{}) do
-    %Node{}
-    |> Node.changeset(attrs)
-    |> Repo.insert()
+    %Node{} |> Node.changeset(attrs) |> Repo.insert()
   end
 
   @doc """
@@ -100,5 +108,14 @@ defmodule Pipsqueak.Data do
   """
   def change_node(%Node{} = node, attrs \\ %{}) do
     Node.changeset(node, attrs)
+  end
+
+  def toggle_node_expanded(%Node{} = node) do
+    q =
+      from n in Node,
+        where: [id: ^node.id],
+        update: [set: [expanded: not n.expanded]]
+
+    Repo.update_all(q, [])
   end
 end

@@ -32,13 +32,16 @@ defmodule Pipsqueak.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.7.2"},
+      # {:phoenix, "~> 1.7.2"},
+      {:phoenix, github: "phoenixframework/phoenix", branch: "main", override: true},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.6"},
       {:ecto_sqlite3, ">= 0.0.0"},
       {:phoenix_html, "~> 3.3"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.18.16"},
+      # {:phoenix_live_view, "~> 0.18.16"},
+      {:phoenix_live_view,
+       github: "phoenixframework/phoenix_live_view", branch: "main", override: true},
       {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.7.2"},
       {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
@@ -49,7 +52,8 @@ defmodule Pipsqueak.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"}
+      {:plug_cowboy, "~> 2.5"},
+      {:bandit, ">= 0.7.7"}
     ]
   end
 
