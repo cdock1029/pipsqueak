@@ -31,7 +31,7 @@ defmodule PipsqueakWeb.NodeLive.FormComponent do
           type="select"
           label="Parent"
           prompt="Choose parent node"
-          options={Enum.map(@nodes, &{&1.title, &1.id})}
+          options={Enum.map(@nodes, &{"#{&1.id} #{&1.title}", &1.id})}
         />
         <.input field={@form[:expanded]} type="checkbox" label="Expanded" />
         <:actions>
@@ -90,7 +90,7 @@ defmodule PipsqueakWeb.NodeLive.FormComponent do
   defp save_node(socket, :new, node_params) do
     case Data.create_node(node_params) do
       {:ok, node} ->
-        notify_parent({:saved, node})
+        notify_parent({:saved, node |> Pipsqueak.Repo.preload(:parent)})
 
         {:noreply,
          socket

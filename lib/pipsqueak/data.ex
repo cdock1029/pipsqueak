@@ -110,12 +110,14 @@ defmodule Pipsqueak.Data do
     Node.changeset(node, attrs)
   end
 
-  def toggle_node_expanded(%Node{} = node) do
-    q =
-      from n in Node,
-        where: [id: ^node.id],
-        update: [set: [expanded: not n.expanded]]
+  def update_node_expanded(%Node{} = node, updated_exanded_value) do
+    changeset = change_node(node, %{expanded: updated_exanded_value})
+    Repo.update(changeset)
+    # q =
+    #   from n in Node,
+    #     where: [id: ^node.id],
+    #     update: [set: [expanded: not n.expanded]]
 
-    Repo.update_all(q, [])
+    # Repo.update_all(q, [])
   end
 end
