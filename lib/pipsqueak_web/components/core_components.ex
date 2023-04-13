@@ -388,6 +388,7 @@ defmodule PipsqueakWeb.CoreComponents do
   Renders a header with title.
   """
   attr :class, :any, default: nil
+  attr :header_id, :string, default: nil
 
   slot :inner_block, required: true
   slot :subtitle
@@ -395,7 +396,10 @@ defmodule PipsqueakWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
+    <header
+      id={@header_id}
+      class={[@actions != [] && "flex items-center justify-between gap-6", @class]}
+    >
       <div>
         <h1 class="text-lg font-semibold leading-8 text-zinc-800">
           <%= render_slot(@inner_block) %>

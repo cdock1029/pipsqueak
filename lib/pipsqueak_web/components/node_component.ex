@@ -2,6 +2,7 @@ defmodule PipsqueakWeb.NodeComponent do
   use PipsqueakWeb, :live_component
 
   alias Pipsqueak.Data
+  alias PipsqueakWeb.NodeTitleComponent
 
   @impl true
   def update(assigns, socket) do
@@ -32,7 +33,7 @@ defmodule PipsqueakWeb.NodeComponent do
         </div>
         <div><%= @node.id %></div>
         <div>
-          <p><%= @node.title %></p>
+          <.live_component module={NodeTitleComponent} node={@node} id={"node-title-#{@node.id}"} />
           <p :if={@node.description} class="mt-2 text-xs text-gray-600"><%= @node.description %></p>
         </div>
       </div>
@@ -53,10 +54,11 @@ defmodule PipsqueakWeb.NodeComponent do
     if node.expanded do
       IO.puts("node expanded..")
 
-      assign_new(socket, :children, fn ->
-        IO.puts("..loading children")
-        Pipsqueak.Repo.preload(node, :children).children
-      end)
+      assign(socket, :children, Pipsqueak.Repo.preload(node, :children).children)
+      # assign_new(socket, :children, fn ->
+      #   IO.puts("..loading children")
+      #   Pipsqueak.Repo.preload(node, :children).children
+      # end)
     else
       IO.puts("not expanded")
       socket
@@ -71,12 +73,34 @@ defmodule PipsqueakWeb.NodeComponent do
   end
 end
 
+defmodule PipsqueakWeb.NodeTitleComponent do
+  use PipsqueakWeb, :live_component
+
+  @impl true
+  def mount(socket) do
+    {:ok, socket |> assign(:editing, false)}
+  end
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <p contenteditable="true"><%= @node.title %></p>
+    """
+  end
+
+  @impl true
+  def handle_event("title_change", params, socket) do
+    IO.inspect(params)
+    {:noreply, socket}
+  end
+end
+
 defmodule PipsqueakWeb.NodeHelpers do
   use PipsqueakWeb, :component
 
   def title(assigns) do
     ~H"""
-    <.header class={[@node.title == "ROOT" && "invisible", "mb-8"]}>
+    <.header header_id="page-heading" class={[@node.title == "ROOT" && "invisible", "mb-8"]}>
       <div class="flex space-x-6">
         <p>
           <%= @node.id %>
