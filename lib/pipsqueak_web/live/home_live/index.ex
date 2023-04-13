@@ -13,7 +13,7 @@ defmodule PipsqueakWeb.HomeLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <NodeHelpers.title node={@node}></NodeHelpers.title>
+    <NodeHelpers.title node={@node} />
     <.live_component :for={node <- @children} module={NodeComponent} id={node.id} node={node} />
     """
   end

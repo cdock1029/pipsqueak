@@ -17,38 +17,32 @@ defmodule PipsqueakWeb.NodeComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
-      <div phx-click={JS.navigate(~p"/?n=#{@node.id}")} class="flex items-center space-x-8">
-        <div class="py-4 cursor-pointer">
+    <div class="node-component">
+      <div class="flex items-start mb-4 space-x-6 node-main-content">
+        <div class="flex items-start space-x-4 controls">
           <button phx-click="toggle-expanded" phx-target={@myself}>
             <.icon
-              name={(@node.expanded && "hero-plus-circle-solid") || "hero-plus-circle"}
-              class="w-5 h-5"
+              name={(@node.expanded && "hero-chevron-down") || "hero-chevron-right"}
+              class="w-4 h-4"
             />
           </button>
+          <.link patch={~p"/?n=#{@node.id}"}>
+            <.icon name="hero-link" class="w-4 h-4" />
+          </.link>
         </div>
-        <div class="py-4 cursor-pointer"><%= @node.id %></div>
-        <div class="py-4 cursor-pointer"><%= @node.title %></div>
-        <div class="py-4 cursor-pointer"><%= @node.description %></div>
+        <div><%= @node.id %></div>
+        <div>
+          <p><%= @node.title %></p>
+          <p :if={@node.description} class="mt-2 text-xs text-gray-600"><%= @node.description %></p>
+        </div>
       </div>
-      <div :if={@node.expanded} class="ml-10">
+      <div :if={@node.expanded} class="ml-16 child-nodes">
         <.live_component :for={child <- @children} module={__MODULE__} id={child.id} node={child} />
+        <p :if={length(@children) == 0} class="py-4 text-sm text-gray-600">
+          empty
+        </p>
       </div>
     </div>
-
-    <%!-- <.table id="nodes" rows={@children} row_click={fn node -> JS.navigate(~p"/?n=#{node.id}") end}>
-      <:col :let={node} label="ID"><%= node.id %></:col>
-      <:col :let={node} label="Title"><%= node.title %></:col>
-      <:col :let={node} label="Description"><%= node.description %></:col>
-      <:col :let={node} label="Expanded">
-        <button phx-click="toggle-expanded" value={node.id}>
-          <.icon
-            name={(node.expanded && "hero-plus-circle-solid") || "hero-plus-circle"}
-            class="w-5 h-5"
-          />
-        </button>
-      </:col>
-    </.table> --%>
     """
   end
 
@@ -83,7 +77,14 @@ defmodule PipsqueakWeb.NodeHelpers do
   def title(assigns) do
     ~H"""
     <.header class={[@node.title == "ROOT" && "invisible", "mb-8"]}>
-      <%= @node.title %>
+      <div class="flex space-x-6">
+        <p>
+          <%= @node.id %>
+        </p>
+        <p>
+          <%= @node.title %>
+        </p>
+      </div>
       <:subtitle>
         <%= if @node.title == "ROOT" do %>
           <span>
