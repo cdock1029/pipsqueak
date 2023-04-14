@@ -6,12 +6,9 @@ defmodule PipsqueakWeb.NodeComponent do
 
   @impl true
   def update(assigns, socket) do
-    IO.inspect("update node-#{assigns.node.id}")
-
     {:ok,
      socket
      |> assign(assigns)
-     # |> assign(:expanded, assigns.node.expanded)
      |> maybe_assign_children()}
   end
 
@@ -32,7 +29,7 @@ defmodule PipsqueakWeb.NodeComponent do
           </.link>
         </div>
         <div><%= @node.id %></div>
-        <div>
+        <div class="flex-1">
           <.live_component module={NodeTitleComponent} node={@node} id={"node-title-#{@node.id}"} />
           <p :if={@node.description} class="mt-2 text-xs text-gray-600"><%= @node.description %></p>
         </div>
@@ -76,6 +73,8 @@ end
 defmodule PipsqueakWeb.NodeTitleComponent do
   use PipsqueakWeb, :live_component
 
+  alias Pipsqueak.Data
+
   @impl true
   def mount(socket) do
     {:ok, socket |> assign(:editing, false)}
@@ -84,14 +83,56 @@ defmodule PipsqueakWeb.NodeTitleComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <p contenteditable="true"><%= @node.title %></p>
+    <div>
+      <p :if={!@editing} phx-click={JS.push("enable-editing", target: @myself)}><%= @node.title %></p>
+      <.node_form
+        :if={@editing}
+        for={@form}
+        id={"node-title-form-#{@node.id}"}
+        phx-target={@myself}
+        phx-submit="save-and-disable-editing"
+      >
+        <.node_input
+          field={@form[:title]}
+          class="px-0 py-0 text-green-400 border-none sm:text-base"
+          phx-click-away={JS.dispatch("submit", to: "#node-title-form-#{@node.id}")}
+        />
+      </.node_form>
+    </div>
     """
   end
 
   @impl true
-  def handle_event("title_change", params, socket) do
-    IO.inspect(params)
+  def handle_event("enable-editing", _params, socket) do
+    changeset = Data.change_node(socket.assigns.node)
+    {:noreply, socket |> assign(:editing, true) |> assign_form(changeset)}
+  end
+
+  def handle_event("save-and-disable-editing", %{"node" => node_params}, socket) do
+    case Data.update_node(socket.assigns.node, node_params) do
+      {:ok, :nochanges} ->
+        {:noreply, assign(socket, :editing, false)}
+
+      {:ok, node} ->
+        send(self(), {__MODULE__, :updated})
+
+        {:noreply,
+         socket
+         |> assign(:node, node)
+         |> assign(:editing, false)}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign_form(socket, changeset)}
+    end
+  end
+
+  @impl true
+  def handle_event("title_change", _params, socket) do
     {:noreply, socket}
+  end
+
+  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+    assign(socket, :form, to_form(changeset))
   end
 end
 

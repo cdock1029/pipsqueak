@@ -76,9 +76,13 @@ defmodule Pipsqueak.Data do
 
   """
   def update_node(%Node{} = node, attrs) do
-    node
-    |> Node.changeset(attrs)
-    |> Repo.update()
+    case change_node(node, attrs) do
+      %Ecto.Changeset{changes: %{} = changes} when map_size(changes) == 0 ->
+        {:ok, :nochanges}
+
+      changeset ->
+        Repo.update(changeset)
+    end
   end
 
   @doc """

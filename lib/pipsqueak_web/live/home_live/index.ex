@@ -3,6 +3,7 @@ defmodule PipsqueakWeb.HomeLive.Index do
 
   alias PipsqueakWeb.NodeComponent
   alias Pipsqueak.Data
+  alias Pipsqueak.Data.Node
   alias PipsqueakWeb.NodeHelpers
 
   @impl true
@@ -39,5 +40,13 @@ defmodule PipsqueakWeb.HomeLive.Index do
     node = Data.get_node!(node_id)
 
     socket |> assign(:node, node) |> assign(:children, node.children)
+  end
+
+  @impl true
+  def handle_info({PipsqueakWeb.NodeTitleComponent, :updated}, socket) do
+    {:noreply,
+     socket
+     |> put_flash(:info, "Node updated successfully")
+     |> assign_nodes(socket.assigns.node.id)}
   end
 end
