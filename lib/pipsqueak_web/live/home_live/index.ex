@@ -20,6 +20,9 @@ defmodule PipsqueakWeb.HomeLive.Index do
   def render(assigns) do
     ~H"""
     <NodeHelpers.title node={@node} />
+    <p :if={length(@children) == 0} class="py-4 text-sm text-gray-600">
+      empty
+    </p>
     <.live_component :for={node <- @children} module={NodeComponent} id={node.id} node={node} />
     """
   end

@@ -4,12 +4,36 @@ defmodule PipsqueakWeb.NodeComponent do
   alias Pipsqueak.Data
   alias PipsqueakWeb.NodeTitleComponent
 
+  alias Pipsqueak.Data.Node
+  alias Pipsqueak.Repo
+  import Ecto.Query, warn: false
+
+  @impl true
+  def preload(list_of_assigns) do
+    list_of_ids = Enum.map(list_of_assigns, & &1.id)
+
+    childrens =
+      from(n in Node, where: n.parent_id in ^list_of_ids)
+      |> Repo.all()
+      |> Enum.group_by(& &1.parent_id)
+
+    Enum.map(list_of_assigns, fn assigns ->
+      Map.put(assigns, :children, Map.get(childrens, assigns.id, []))
+    end)
+  end
+
+  @impl true
+  def mount(socket) do
+    {:ok, socket}
+  end
+
   @impl true
   def update(assigns, socket) do
-    {:ok,
-     socket
-     |> assign(assigns)
-     |> maybe_assign_children()}
+    {
+      :ok,
+      socket
+      |> assign(assigns)
+    }
   end
 
   @impl true
@@ -34,7 +58,7 @@ defmodule PipsqueakWeb.NodeComponent do
           <p :if={@node.description} class="mt-2 text-xs text-gray-600"><%= @node.description %></p>
         </div>
       </div>
-      <div :if={@node.expanded} class="ml-16 child-nodes">
+      <div class={[!@node.expanded && "hidden", "ml-16 child-nodes"]}>
         <.live_component :for={child <- @children} module={__MODULE__} id={child.id} node={child} />
         <p :if={length(@children) == 0} class="py-4 text-sm text-gray-600">
           empty
@@ -44,24 +68,17 @@ defmodule PipsqueakWeb.NodeComponent do
     """
   end
 
-  def maybe_assign_children(socket) do
-    node = socket.assigns.node
-
-    if node.expanded do
-      assign(socket, :children, Pipsqueak.Repo.preload(node, :children).children)
-      # assign_new(socket, :children, fn ->
-      #   Pipsqueak.Repo.preload(node, :children).children
-      # end)
-    else
-      socket
-    end
-  end
-
   @impl true
   def handle_event("toggle-expanded", _params, socket) do
-    updated_expanded_value = !socket.assigns.node.expanded
-    {:ok, node} = Data.update_node_expanded(socket.assigns.node, updated_expanded_value)
-    {:noreply, socket |> assign(:node, node) |> maybe_assign_children()}
+    node = socket.assigns.node
+    updated_expanded_value = !node.expanded
+
+    Task.start(fn ->
+      Data.update_node_expanded(node, updated_expanded_value)
+    end)
+
+    # {:ok, node} = Data.update_node_expanded(socket.assigns.node, updated_expanded_value)
+    {:noreply, socket |> assign(:node, %Node{node | expanded: updated_expanded_value})}
   end
 end
 
