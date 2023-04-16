@@ -3,11 +3,16 @@ defmodule PipsqueakWeb.HomeLive.Index do
 
   alias PipsqueakWeb.NodeComponent
   alias Pipsqueak.Data
-  alias Pipsqueak.Data.Node
   alias PipsqueakWeb.NodeHelpers
+
+  @topic inspect(__MODULE__)
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(Pipsqueak.PubSub, @topic)
+    end
+
     {:ok, socket}
   end
 
@@ -20,20 +25,19 @@ defmodule PipsqueakWeb.HomeLive.Index do
   end
 
   @impl true
-  def handle_params(params, _url, socket) do
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+  def handle_params(%{"n" => node_id}, _url, socket) do
+    {:noreply,
+     socket
+     |> assign(:page_title, "Node:#{node_id}")
+     |> assign_nodes(node_id)}
   end
 
-  defp apply_action(socket, :index, %{"n" => node_id}) do
-    socket
-    |> assign(:page_title, "Node:#{node_id}")
-    |> assign_nodes(node_id)
-  end
-
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Home")
-    |> assign_nodes(nil)
+  @impl true
+  def handle_params(_params, _url, socket) do
+    {:noreply,
+     socket
+     |> assign(:page_title, "Home")
+     |> assign_nodes(nil)}
   end
 
   defp assign_nodes(socket, node_id) do
@@ -48,5 +52,10 @@ defmodule PipsqueakWeb.HomeLive.Index do
      socket
      |> put_flash(:info, "Node updated successfully")
      |> assign_nodes(socket.assigns.node.id)}
+  end
+
+  def handle_info({:squeak, id}, socket) do
+    IO.inspect(id, label: "got squeak:")
+    {:noreply, socket}
   end
 end

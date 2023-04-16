@@ -46,18 +46,13 @@ defmodule PipsqueakWeb.NodeComponent do
 
   def maybe_assign_children(socket) do
     node = socket.assigns.node
-    IO.puts("maybe_assign_children ID:#{node.id}")
 
     if node.expanded do
-      IO.puts("node expanded..")
-
       assign(socket, :children, Pipsqueak.Repo.preload(node, :children).children)
       # assign_new(socket, :children, fn ->
-      #   IO.puts("..loading children")
       #   Pipsqueak.Repo.preload(node, :children).children
       # end)
     else
-      IO.puts("not expanded")
       socket
     end
   end

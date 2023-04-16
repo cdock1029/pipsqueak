@@ -47,6 +47,23 @@ defmodule Pipsqueak.Data do
     node
   end
 
+  def get_graph() do
+    node_graph_initial_query =
+      from n in Node,
+        where: is_nil(n.parent_id)
+
+    node_graph_recursion_query =
+      from n in Node, inner_join: ng in "node_graph", on: n.parent_id == ng.id
+
+    node_graph_query = node_graph_initial_query |> union(^node_graph_recursion_query)
+
+    Node
+    |> recursive_ctes(true)
+    |> with_cte("node_graph", as: ^node_graph_query)
+    |> Repo.all()
+    |> Enum.group_by(& &1.parent_id)
+  end
+
   @doc """
   Creates a node.
 
