@@ -5,17 +5,12 @@ defmodule PipsqueakWeb.NodeComponent do
   alias PipsqueakWeb.NodeTitleComponent
 
   alias Pipsqueak.Data.Node
-  alias Pipsqueak.Repo
-  import Ecto.Query, warn: false
 
   @impl true
   def preload(list_of_assigns) do
     list_of_ids = Enum.map(list_of_assigns, & &1.id)
 
-    childrens =
-      from(n in Node, where: n.parent_id in ^list_of_ids)
-      |> Repo.all()
-      |> Enum.group_by(& &1.parent_id)
+    childrens = Data.get_children_from_ids(list_of_ids)
 
     Enum.map(list_of_assigns, fn assigns ->
       Map.put(assigns, :children, Map.get(childrens, assigns.id, []))
@@ -25,6 +20,17 @@ defmodule PipsqueakWeb.NodeComponent do
   @impl true
   def mount(socket) do
     {:ok, socket}
+  end
+
+  def update(%{action: {:update_expand, expand_value}}, socket) do
+    Enum.each(socket.assigns.children, fn child ->
+      send_update(PipsqueakWeb.NodeComponent, id: child.id, action: {:update_expand, expand_value})
+    end)
+
+    {:ok,
+     update(socket, :node, fn node ->
+       %Node{node | expanded: expand_value}
+     end)}
   end
 
   @impl true
@@ -58,9 +64,9 @@ defmodule PipsqueakWeb.NodeComponent do
           <p :if={@node.description} class="mt-2 text-xs text-gray-600"><%= @node.description %></p>
         </div>
       </div>
-      <div class={[!@node.expanded && "hidden", "ml-16 child-nodes"]}>
+      <div class={[!@node.expanded && "hidden", "pl-16 mb-2 ml-2 child-nodes border-l-2"]}>
         <.live_component :for={child <- @children} module={__MODULE__} id={child.id} node={child} />
-        <p :if={length(@children) == 0} class="py-4 text-sm text-gray-600">
+        <p :if={length(@children) == 0} class="pb-4 text-sm text-gray-600">
           empty
         </p>
       </div>
@@ -70,15 +76,14 @@ defmodule PipsqueakWeb.NodeComponent do
 
   @impl true
   def handle_event("toggle-expanded", _params, socket) do
-    node = socket.assigns.node
-    updated_expanded_value = !node.expanded
+    {:noreply,
+     update(socket, :node, fn node ->
+       Task.start(fn ->
+         Data.update_node_expanded(node, !node.expanded)
+       end)
 
-    Task.start(fn ->
-      Data.update_node_expanded(node, updated_expanded_value)
-    end)
-
-    # {:ok, node} = Data.update_node_expanded(socket.assigns.node, updated_expanded_value)
-    {:noreply, socket |> assign(:node, %Node{node | expanded: updated_expanded_value})}
+       %Node{node | expanded: !node.expanded}
+     end)}
   end
 end
 
@@ -106,7 +111,7 @@ defmodule PipsqueakWeb.NodeTitleComponent do
       >
         <.node_input
           field={@form[:title]}
-          class="px-0 py-0 text-green-400 border-none sm:text-base"
+          class="px-0 py-0 text-base !text-green-500 !font-semibold border-none"
           phx-click-away={JS.dispatch("submit", to: "#node-title-form-#{@node.id}")}
         />
       </.node_form>
@@ -126,7 +131,8 @@ defmodule PipsqueakWeb.NodeTitleComponent do
         {:noreply, assign(socket, :editing, false)}
 
       {:ok, node} ->
-        send(self(), {__MODULE__, :updated})
+        # send(self(), {__MODULE__, :updated})
+        send_update(PipsqueakWeb.NodeComponent, id: node.id, node: node)
 
         {:noreply,
          socket

@@ -141,4 +141,15 @@ defmodule Pipsqueak.Data do
 
     # Repo.update_all(q, [])
   end
+
+  def get_children_from_ids(list_of_ids) do
+    from(n in Node, where: n.parent_id in ^list_of_ids)
+    |> Repo.all()
+    |> Enum.group_by(& &1.parent_id)
+  end
+
+  def update_all_expanded(value) do
+    from(Node, update: [set: [expanded: ^value]])
+    |> Repo.update_all([])
+  end
 end
