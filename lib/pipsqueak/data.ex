@@ -35,29 +35,39 @@ defmodule Pipsqueak.Data do
       ** (Ecto.NoResultsError)
 
   """
-  def get_node!(id) when not is_nil(id),
-    do: Repo.get!(Node, id) |> Repo.preload([:parent, :children])
-
-  def get_node!(nil) do
-    q =
+  def get_node!(id) when not is_nil(id) do
+    query =
       from n in Node,
-        where: is_nil(n.parent_id)
+        left_join: c in assoc(n, :children),
+        preload: [children: c]
 
-    [node] = Repo.all(q) |> Repo.preload([:parent, :children])
-    node
+    Repo.get!(query, id)
   end
 
-  def get_graph() do
+  def get_node!(nil) do
+    from(n in Node,
+      left_join: c in assoc(n, :children),
+      where: is_nil(n.parent_id),
+      preload: [children: c]
+    )
+    |> Repo.all()
+    |> hd()
+  end
+
+  def get_graph(id \\ nil) do
+    # todo: this is messy
     node_graph_initial_query =
-      from n in Node,
-        where: is_nil(n.parent_id)
+      case id do
+        nil -> from(n in Node, where: is_nil(n.parent_id))
+        node_id -> from(n in Node, where: n.id == ^node_id)
+      end
 
     node_graph_recursion_query =
       from n in Node, inner_join: ng in "node_graph", on: n.parent_id == ng.id
 
     node_graph_query = node_graph_initial_query |> union(^node_graph_recursion_query)
 
-    Node
+    {"node_graph", Node}
     |> recursive_ctes(true)
     |> with_cte("node_graph", as: ^node_graph_query)
     |> Repo.all()
