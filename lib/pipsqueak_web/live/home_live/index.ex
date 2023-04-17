@@ -24,9 +24,7 @@ defmodule PipsqueakWeb.HomeLive.Index do
       <.button phx-click="collapse-all">Collapse all</.button>
     </div>
     <NodeHelpers.title node={@node} />
-    <p :if={length(@children) == 0} class="py-4 text-sm text-gray-600">
-      empty
-    </p>
+
     <.live_component :for={node <- @children} module={NodeComponent} id={node.id} node={node} />
     """
   end

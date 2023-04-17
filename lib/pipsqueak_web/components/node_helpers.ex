@@ -3,25 +3,14 @@ defmodule PipsqueakWeb.NodeHelpers do
 
   def title(assigns) do
     ~H"""
-    <.header header_id="page-heading" class={[@node.title == "ROOT" && "invisible", "mb-8"]}>
+    <.header header_id="page-heading" class={[@node.title == "ROOT" && "hidden", "mb-4 ml-8"]}>
       <div class="flex space-x-6">
-        <p>
-          <%= @node.id %>
-        </p>
-        <p>
+        <h1 class="text-xl font-semibold">
           <%= @node.title %>
-        </p>
+        </h1>
       </div>
       <:subtitle>
-        <%= if @node.title == "ROOT" do %>
-          <span>
-            <%= @node.description %>
-          </span>
-        <% else %>
-          <span>
-            <%= @node.description %>
-          </span>
-        <% end %>
+        <%= @node.description %>
       </:subtitle>
     </.header>
     """
