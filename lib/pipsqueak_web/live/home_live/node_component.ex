@@ -22,17 +22,6 @@ defmodule PipsqueakWeb.NodeComponent do
     {:ok, socket}
   end
 
-  def update(%{action: {:update_expand, expand_value}}, socket) do
-    Enum.each(socket.assigns.children, fn child ->
-      send_update(PipsqueakWeb.NodeComponent, id: child.id, action: {:update_expand, expand_value})
-    end)
-
-    {:ok,
-     update(socket, :node, fn node ->
-       %Node{node | expanded: expand_value}
-     end)}
-  end
-
   @impl true
   def update(assigns, socket) do
     {
@@ -51,7 +40,7 @@ defmodule PipsqueakWeb.NodeComponent do
           <button
             phx-click="toggle-expanded"
             phx-target={@myself}
-            class={length(@children) == 0 && "invisible"}
+            class={[length(@children) == 0 && "invisible"]}
           >
             <.icon
               name={(@node.expanded && "hero-chevron-down") || "hero-chevron-right"}
@@ -59,19 +48,21 @@ defmodule PipsqueakWeb.NodeComponent do
             />
           </button>
           <.link patch={~p"/?n=#{@node.id}"}>
-            <.icon name="hero-link" class="w-4 h-4" />
+            <.icon name="hero-link" class="w-3 h-3" />
           </.link>
         </div>
-        <%!-- <div><%= @node.id %></div> --%>
         <div class="flex-1 ml-4">
           <.live_component module={NodeTitleComponent} node={@node} id={"node-title-#{@node.id}"} />
           <p :if={@node.description} class="mt-2 text-xs text-gray-600"><%= @node.description %></p>
         </div>
       </div>
-      <div class={[
-        (!@node.expanded or length(@children) == 0) && "hidden",
-        "pl-12 mb-2 ml-2 child-nodes border-l-2"
-      ]}>
+      <div
+        id={"list-wrapper-#{@node.id}"}
+        class={[
+          (!@node.expanded or length(@children) == 0) && "hidden",
+          "pl-12 mb-2 -ml-4 child-nodes border-l-2"
+        ]}
+      >
         <.live_component :for={child <- @children} module={__MODULE__} id={child.id} node={child} />
       </div>
     </div>
@@ -111,6 +102,7 @@ defmodule PipsqueakWeb.NodeTitleComponent do
         id={"node-title-form-#{@node.id}"}
         phx-target={@myself}
         phx-change="save"
+        phx-submit="add_new"
       >
         <.node_input
           id={"node-title-input-#{@node.id}"}
@@ -130,7 +122,6 @@ defmodule PipsqueakWeb.NodeTitleComponent do
         {:noreply, socket}
 
       {:ok, node} ->
-        # send(self(), {__MODULE__, :updated})
         send_update(PipsqueakWeb.NodeComponent, id: node.id, node: node)
 
         {:noreply, socket |> assign(:node, node)}
@@ -138,6 +129,12 @@ defmodule PipsqueakWeb.NodeTitleComponent do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign_form(socket, changeset)}
     end
+  end
+
+  def handle_event("add_new", params, socket) do
+    node = socket.assigns.node
+    IO.inspect({params, node}, label: "add-new params")
+    {:noreply, socket}
   end
 
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do

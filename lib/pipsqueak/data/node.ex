@@ -17,7 +17,7 @@ defmodule Pipsqueak.Data.Node do
   def changeset(node, attrs) do
     node
     |> cast(attrs, [:title, :description, :expanded, :parent_id])
-    |> validate_required([:title])
+    |> validate_required([:parent_id])
     |> validate_parent_not_self()
     |> cast_assoc(:children)
   end

@@ -67,11 +67,24 @@ defmodule Pipsqueak.Data do
 
     node_graph_query = node_graph_initial_query |> union(^node_graph_recursion_query)
 
-    {"node_graph", Node}
-    |> recursive_ctes(true)
-    |> with_cte("node_graph", as: ^node_graph_query)
-    |> Repo.all()
-    |> Enum.group_by(& &1.parent_id)
+    nodes =
+      {"node_graph", Node}
+      |> recursive_ctes(true)
+      |> with_cte("node_graph", as: ^node_graph_query)
+      |> Repo.all()
+
+    build_tree(nodes)
+  end
+
+  defp build_tree([root | nodes]) do
+    groups = Enum.group_by(nodes, & &1.parent_id)
+    associate_children(root, groups)
+  end
+
+  defp associate_children(node, groups) do
+    children = Map.get(groups, node.id, [])
+    children_trees = Enum.map(children, &associate_children(&1, groups))
+    Map.put(node, :children, children_trees)
   end
 
   @doc """

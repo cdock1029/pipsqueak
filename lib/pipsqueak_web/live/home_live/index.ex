@@ -69,14 +69,7 @@ defmodule PipsqueakWeb.HomeLive.Index do
   def handle_event("collapse-all", _params, socket), do: execute_expand_op(false, socket)
 
   defp execute_expand_op(value, socket) do
-    Task.start(fn ->
-      Data.update_all_expanded(value)
-    end)
-
-    Enum.each(socket.assigns.children, fn child ->
-      send_update(PipsqueakWeb.NodeComponent, id: child.id, action: {:update_expand, value})
-    end)
-
-    {:noreply, socket}
+    Data.update_all_expanded(value)
+    {:noreply, assign_nodes(socket, socket.assigns.node.id)}
   end
 end
