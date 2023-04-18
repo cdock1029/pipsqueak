@@ -19,13 +19,12 @@ defmodule PipsqueakWeb.HomeLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="absolute flex items-center space-x-8 top-8 right-12">
+    <NodeHelpers.title node={@node} />
+    <.live_component :for={node <- @children} module={NodeComponent} id={node.id} node={node} />
+    <section class="absolute flex items-center space-x-8 top-8 right-12">
       <.button class="bg-purple-700" phx-click="expand-all">Expand all</.button>
       <.button phx-click="collapse-all">Collapse all</.button>
-    </div>
-    <NodeHelpers.title node={@node} />
-
-    <.live_component :for={node <- @children} module={NodeComponent} id={node.id} node={node} />
+    </section>
     """
   end
 
@@ -46,7 +45,7 @@ defmodule PipsqueakWeb.HomeLive.Index do
   end
 
   defp assign_nodes(socket, node_id) do
-    node = Data.get_node!(node_id)
+    node = Data.get_graph(node_id)
     socket |> assign(node: node, children: node.children)
   end
 

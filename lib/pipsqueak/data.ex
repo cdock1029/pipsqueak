@@ -82,8 +82,12 @@ defmodule Pipsqueak.Data do
   end
 
   defp associate_children(node, groups) do
-    children = Map.get(groups, node.id, [])
-    children_trees = Enum.map(children, &associate_children(&1, groups))
+    children_trees =
+      groups
+      |> Map.get(node.id, [])
+      |> Stream.map(&%Node{&1 | __meta__: %{&1.__meta__ | source: "nodes"}})
+      |> Enum.map(&associate_children(&1, groups))
+
     Map.put(node, :children, children_trees)
   end
 

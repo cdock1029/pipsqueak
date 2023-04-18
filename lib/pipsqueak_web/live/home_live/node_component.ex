@@ -7,28 +7,11 @@ defmodule PipsqueakWeb.NodeComponent do
   alias Pipsqueak.Data.Node
 
   @impl true
-  def preload(list_of_assigns) do
-    list_of_ids = Enum.map(list_of_assigns, & &1.id)
-
-    childrens = Data.get_children_from_ids(list_of_ids)
-
-    Enum.map(list_of_assigns, fn assigns ->
-      Map.put(assigns, :children, Map.get(childrens, assigns.id, []))
-    end)
-  end
-
-  @impl true
-  def mount(socket) do
-    {:ok, socket}
-  end
-
-  @impl true
   def update(assigns, socket) do
-    {
-      :ok,
-      socket
-      |> assign(assigns)
-    }
+    {:ok,
+     socket
+     |> assign(assigns)
+     |> assign(:children, assigns.node.children)}
   end
 
   @impl true
@@ -36,7 +19,7 @@ defmodule PipsqueakWeb.NodeComponent do
     ~H"""
     <div class="node-component">
       <div class="flex items-start mb-4 node-main-content">
-        <div class="flex items-start space-x-4 controls">
+        <div class="flex items-start space-x-3 controls">
           <button
             phx-click="toggle-expanded"
             phx-target={@myself}
@@ -60,7 +43,7 @@ defmodule PipsqueakWeb.NodeComponent do
         id={"list-wrapper-#{@node.id}"}
         class={[
           (!@node.expanded or length(@children) == 0) && "hidden",
-          "pl-12 mb-2 -ml-4 child-nodes border-l-2"
+          "pl-8 mb-2 ml-1 child-nodes border-l-2"
         ]}
       >
         <.live_component :for={child <- @children} module={__MODULE__} id={child.id} node={child} />
