@@ -54,7 +54,7 @@ defmodule Pipsqueak.Data do
     |> hd()
   end
 
-  def get_graph(id \\ nil) do
+  def get_graph(id) do
     # todo: this is messy
     node_graph_initial_query =
       case id do
@@ -75,6 +75,9 @@ defmodule Pipsqueak.Data do
 
     build_tree(nodes)
   end
+
+  defp build_tree([]), do: nil
+  defp build_tree([root]), do: %Node{root | children: []}
 
   defp build_tree([root | nodes]) do
     groups = Enum.group_by(nodes, & &1.parent_id)
