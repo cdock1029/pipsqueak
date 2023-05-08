@@ -55,7 +55,6 @@ defmodule Pipsqueak.Data do
   end
 
   def get_graph(id) do
-    # todo: this is messy
     node_graph_initial_query =
       case id do
         nil -> from(n in Node, where: is_nil(n.parent_id))
@@ -164,18 +163,6 @@ defmodule Pipsqueak.Data do
   def update_node_expanded(%Node{} = node, updated_exanded_value) do
     changeset = change_node(node, %{expanded: updated_exanded_value})
     Repo.update(changeset)
-    # q =
-    #   from n in Node,
-    #     where: [id: ^node.id],
-    #     update: [set: [expanded: not n.expanded]]
-
-    # Repo.update_all(q, [])
-  end
-
-  def get_children_from_ids(list_of_ids) do
-    from(n in Node, where: n.parent_id in ^list_of_ids)
-    |> Repo.all()
-    |> Enum.group_by(& &1.parent_id)
   end
 
   def update_all_expanded(value) do
